@@ -1,0 +1,19 @@
+DW APPROVED
+
+Project Design: Create an instant messaging server
+
+Members: Kayla Sinoimeri, Chris Grant, and Sarah Joseph
+
+On startup/login, the user will choose a unique username. When they log onto this server, they will see a list of who else is also
+currently logged on. They will be able to select another username and open a chat with them (or if they have already chatted, they will
+be able to see see their chat history.)
+
+Techinical Design:
+The main part of the project will be the chat server, which will use networking to connect to its clients, and processes will be used
+to fork off children and execute commands. The files will be written in order to preserve the chat history.
+
+The serverw will generate a folder for each user, which will contain separate sub-folders for messages, commands, and files. Data sent
+through the progrm will be automatically placed into folder (organized based on user and data type). When a user connects the server,
+it will check those folders and display any new messages/data sent.
+
+The chat server will probably take 4 weeks.
