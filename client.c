@@ -7,82 +7,84 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <netdb.h>
 
 
-/*
-clang client.c 104.129.86.9314 - Connect to specific server
+// int main(int argc, char **argv) {
+//   char server_addr[16];
+//
+//   if( argc == 2 ) {
+//     strcpy(server_addr, argv[1]);
+//   } else {
+//     printf("Please supply chat server address: \"./client 104.159.68.32\"\n");
+//     return 0;
+//   }
 
-login or signup: login
+int main(int argc, char *argv[]) {
+   int sockfd, portno, n;
+   struct sockaddr_in serv_addr;
+   struct hostent *server;
 
-username: iieqwuigfeiwq
-password: hwqihiqhii
+   char buffer[256];
 
-connected
+   if (argc < 3) {
+      fprintf(stderr,"usage %s hostname port\n", argv[0]);
+      exit(0);
+   }
 
-failed to connect
+   portno = atoi(argv[2]);
 
-conversations:
-- @john john smith
-- @kyle kyle roberts
+   /* Create a socket point */
+   sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
-who do you want to talk to (@username): @kyle
+   if (sockfd < 0) {
+      perror("ERROR opening socket");
+      exit(1);
+   }
 
-Message History with Kyle Roberts (@kyle):
+   server = gethostbyname(argv[1]);
 
-Kyle (Dec, 5, 2015 at 10:01pm): hewifh ewhfoewqhfewh
-You (Dec 5, 2015 at 10:02pm): hhefhew ehwifeho heiwoq
+   if (server == NULL) {
+      fprintf(stderr,"ERROR, no such host\n");
+      exit(0);
+   }
 
-Compose: hey what's up
+   bzero((char *) &serv_addr, sizeof(serv_addr));
+   serv_addr.sin_family = AF_INET;
+   bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr, server->h_length);
+   serv_addr.sin_port = htons(portno);
 
-You (Dec 6, 2015 at 4:59pm): hey what's up
+   /* Now connect to the server */
+   if (connect(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
+      perror("ERROR connecting");
+      exit(1);
+   }
 
-Compose:
+   /* Now ask for a message from the user, this message
+      * will be read by server
+   */
 
-Kyle (Dec 6, 2015 at 5:00pm): Hey
+   printf("Please enter the message: ");
+   bzero(buffer,256);
+   fgets(buffer,255,stdin);
 
-Compose:
+   /* Send message to the server */
+   n = write(sockfd, buffer, strlen(buffer));
 
+   if (n < 0) {
+      perror("ERROR writing to socket");
+      exit(1);
+   }
 
+   /* Now read server response */
+   bzero(buffer,256);
+   n = read(sockfd, buffer, 255);
 
+   if (n < 0) {
+      perror("ERROR reading from socket");
+      exit(1);
+   }
 
-
- */
-
-int main(int argc, char **argv) {
-
-
-  if( argc == 2 ) {
-     printf("The argument supplied is %s\n", argv[1]);
-  }
-  else if( argc > 2 ) {
-     printf("Too many arguments supplied.\n");
-  }
-  else {
-     printf("One argument expected.\n");
-  }
-
-  int socket_id;
-  char buffer[256];
-  int i;
-
-  //create the socket
-  socket_id = socket( AF_INET, SOCK_STREAM, 0 );
-
-  //bind to port/address
-  struct sockaddr_in sock;
-  sock.sin_family = AF_INET;
-  sock.sin_port = htons(24601);
-  //Set the IP address to connect to
-  //127.0.0.1 is the "loopback" address of any machine
-  inet_aton( "127.0.0.1", &(sock.sin_addr) );
-  bind( socket_id, (struct sockaddr *)&sock, sizeof(sock));
-
-  //attempt a connection
-  i = connect(socket_id, (struct sockaddr *)&sock, sizeof(sock));
-  printf("<client> connect returned: %d\n", i);
-
-  read( socket_id, buffer, sizeof(buffer));
-  printf("<client> received: [%s]\n", buffer );
-
-  return 0;
+   printf("%s\n",buffer);
+   return 0;
 }

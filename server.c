@@ -7,28 +7,89 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
+void doprocessing (int sock) {
+   int n;
+   char buffer[256];
+   bzero(buffer,256);
+   n = read(sock,buffer,255);
 
-int main() {
+   if (n < 0) {
+      perror("ERROR reading from socket");
+      exit(1);
+   }
 
-  int socket_id, socket_client;
+   printf("Here is the message: %s\n",buffer);
+   n = write(sock,"I got your message",18);
 
-  //create the socket
-  socket_id = socket( AF_INET, SOCK_STREAM, 0 );
+   if (n < 0) {
+      perror("ERROR writing to socket");
+      exit(1);
+   }
 
-  //bind to port/address
-  struct sockaddr_in listener;
-  listener.sin_family = AF_INET;  //socket type IPv4
-  listener.sin_port = htons(24601); //port #
-  listener.sin_addr.s_addr = INADDR_ANY; //bind to any incoming address
-  bind(socket_id, (struct sockaddr *)&listener, sizeof(listener));
+}
 
-  listen( socket_id, 1 );
-  printf("<server> listening\n");
+int main( int argc, char *argv[] ) {
+   int sockfd, newsockfd, portno;
+   socklen_t clilen;
+   char buffer[256];
+   struct sockaddr_in serv_addr, cli_addr;
+   int n, pid;
 
-  socket_client = accept( socket_id, NULL, NULL );
-  printf("<server> connected: %d\n", socket_client );
+   /* First call to socket() function */
+   sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
-  write( socket_client, "hello", 6 );
+   if (sockfd < 0) {
+      perror("ERROR opening socket");
+      exit(1);
+   }
 
-  return 0;
+   /* Initialize socket structure */
+   bzero((char *) &serv_addr, sizeof(serv_addr));
+   portno = 5001;
+
+   serv_addr.sin_family = AF_INET;
+   serv_addr.sin_addr.s_addr = INADDR_ANY;
+   serv_addr.sin_port = htons(portno);
+
+   /* Now bind the host address using bind() call.*/
+   if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
+      perror("ERROR on binding");
+      exit(1);
+   }
+
+   /* Now start listening for the clients, here
+      * process will go in sleep mode and will wait
+      * for the incoming connection
+   */
+
+   listen(sockfd, 5);
+   clilen = sizeof(cli_addr);
+
+   while (1) {
+      newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
+
+      if (newsockfd < 0) {
+         perror("ERROR on accept");
+         exit(1);
+      }
+
+      /* Create child process */
+      pid = fork();
+
+      if (pid < 0) {
+         perror("ERROR on fork");
+         exit(1);
+      }
+
+      if (pid == 0) {
+         /* This is the client process */
+         close(sockfd);
+         doprocessing(newsockfd);
+         exit(0);
+      }
+      else {
+         close(newsockfd);
+      }
+
+   } /* end of while */
 }
