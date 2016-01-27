@@ -34,3 +34,13 @@ Kyle (Dec 6, 2015 at 5:00pm): Hey
 
 Compose:
 ```
+
+## Server Client Commands
+- `\SUCCESS`: Successful operation
+- `\FAILURE`: Failed operation
+- `\LOGIN\@username\password`: Login with `@username` and `password`
+- `\SIGNUP\first name\last name\@username\password`: Sign up with `first name`, `last name`, `@username`, and `password`
+- `\CONVERSATIONS`: get conversations for current user
+- `\HISTORY\@username`: get conversation history for current user and user with `@username`
+- `\COMPOSE\@username\message`: send `message` to `@username` ()
+- `\MESSAGE\@username\date\message`: send `message` to current user from `@username` on `date` (from server to client)
