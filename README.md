@@ -3,7 +3,7 @@ Chat client and server written in C
 
 ## Use
 
-Server: `make server; ./server`
+Server: `make server; ./server`  
 Client: `make client; ./client <ip address> <port>` (of the server)
 
 ## Available Commands
